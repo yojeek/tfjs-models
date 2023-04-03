@@ -74,7 +74,6 @@ export const TUNABLE_FLAG_VALUE_RANGE_MAP = {
 };
 
 export const BACKEND_FLAGS_MAP = {
-  ['tfjs-wasm']: ['WASM_HAS_SIMD_SUPPORT', 'WASM_HAS_MULTITHREAD_SUPPORT'],
   ['tfjs-webgl']: [
     'WEBGL_VERSION', 'WEBGL_CPU_FORWARD', 'WEBGL_PACK',
     'WEBGL_FORCE_F16_TEXTURES', 'WEBGL_RENDER_FLOAT32_CAPABLE',
@@ -93,8 +92,6 @@ export const MODEL_BACKEND_MAP = {
 export const TUNABLE_FLAG_NAME_MAP = {
   PROD: 'production mode',
   WEBGL_VERSION: 'webgl version',
-  WASM_HAS_SIMD_SUPPORT: 'wasm SIMD',
-  WASM_HAS_MULTITHREAD_SUPPORT: 'wasm multithread',
   WEBGL_CPU_FORWARD: 'cpu forward',
   WEBGL_PACK: 'webgl pack',
   WEBGL_FORCE_F16_TEXTURES: 'enforce float16',

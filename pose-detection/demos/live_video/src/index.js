@@ -19,12 +19,7 @@ import '@tensorflow/tfjs-backend-webgl';
 import '@tensorflow/tfjs-backend-webgpu';
 
 import * as mpPose from '@mediapipe/pose';
-import * as tfjsWasm from '@tensorflow/tfjs-backend-wasm';
 import * as tf from '@tensorflow/tfjs-core';
-
-tfjsWasm.setWasmPaths(
-    `https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@${
-        tfjsWasm.version_wasm}/dist/`);
 
 import * as posedetection from '@tensorflow-models/pose-detection';
 
@@ -35,6 +30,7 @@ import {setupDatGui} from './option_panel';
 import {STATE} from './params';
 import {setupStats} from './stats_panel';
 import {setBackendAndEnvFlags} from './util';
+import OSCTransport from './osc_transport';
 
 let detector, camera, stats;
 let startInferenceTime, numInferences = 0;
@@ -184,10 +180,14 @@ async function renderResult() {
 
     endEstimatePosesStats();
   }
+
   const rendererParams = useGpuRenderer ?
       [camera.video, poses, canvasInfo, STATE.modelConfig.scoreThreshold] :
       [camera.video, poses, STATE.isModelChanged];
+
   renderer.draw(rendererParams);
+
+  osc.transmitPoses(poses, { width: camera.video.width, height: camera.video.height});
 }
 
 async function renderPrediction() {
@@ -230,6 +230,8 @@ async function app() {
 
   renderPrediction();
 };
+
+const osc = new OSCTransport();
 
 app();
 
