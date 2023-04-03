@@ -31,6 +31,7 @@ import {STATE} from './params';
 import {setupStats} from './stats_panel';
 import {setBackendAndEnvFlags} from './util';
 import OSCTransport from './osc_transport';
+import MIDITransport from './midi_transport';
 
 let detector, camera, stats;
 let startInferenceTime, numInferences = 0;
@@ -178,7 +179,7 @@ async function renderResult() {
 
   renderer.draw(rendererParams);
 
-  osc.transmitPoses(poses, { width: camera.video.width, height: camera.video.height});
+  osc.transmitPoses(poses, { width: camera.video.width, height: camera.video.height}, STATE.modelConfig.scoreThreshold);
 }
 
 async function renderPrediction() {
@@ -223,6 +224,7 @@ async function app() {
 };
 
 const osc = new OSCTransport();
+const midi = new MIDITransport;
 
 app();
 

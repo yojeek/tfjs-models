@@ -15,7 +15,7 @@ class OSCTransport {
         this.osc.open();
     }
 
-    public transmitPoses(poses: Pose[], frameSize: ImageSize) {
+    public transmitPoses(poses: Pose[], frameSize: ImageSize, scoreThreshold: number) {
         for (let i = 0; i < poses.length; i++) {
             const pose = poses[i];
             const keypoints = calculators.keypointsToNormalizedKeypoints(pose.keypoints, frameSize);
@@ -24,12 +24,14 @@ class OSCTransport {
                 const keypoint = keypoints[j];
 
                 if (this.osc.status() === OSC.STATUS.IS_OPEN) {
-                    this.osc.send(new OSC.Message(`/pose`, i, j, keypoint.x, keypoint.y, keypoint.name || 'unknown'));
+                    if (keypoint.score && keypoint.score > scoreThreshold) {
+                        this.osc.send(new OSC.Message(`/pose`, i, j, keypoint.x, keypoint.y, keypoint.name || 'unknown'));
+                    }
                 } else if (this.osc.status() === OSC.STATUS.IS_CLOSED) {
                     console.log('OSC connection closed, trying to reconnect...');
                     this.osc.open();
                 }
-            }
+            } 
         }
     }
 }
