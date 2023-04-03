@@ -23,7 +23,12 @@ class OSCTransport {
             for (let j = 0; j < keypoints.length; j++) {
                 const keypoint = keypoints[j];
 
-                this.osc.send(new OSC.Message(`/pose/`, j, keypoint.x, keypoint.y, keypoint.name || 'unknown'));
+                if (this.osc.status() === OSC.STATUS.IS_OPEN) {
+                    this.osc.send(new OSC.Message(`/pose`, i, j, keypoint.x, keypoint.y, keypoint.name || 'unknown'));
+                } else if (this.osc.status() === OSC.STATUS.IS_CLOSED) {
+                    console.log('OSC connection closed, trying to reconnect...');
+                    this.osc.open();
+                }
             }
         }
     }
