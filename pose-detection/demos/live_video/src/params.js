@@ -31,12 +31,6 @@ export const STATE = {
   flags: {},
   modelConfig: {}
 };
-export const BLAZEPOSE_CONFIG = {
-  maxPoses: 1,
-  type: 'full',
-  scoreThreshold: 0.65,
-  render3D: true
-};
 export const POSENET_CONFIG = {
   maxPoses: 1,
   scoreThreshold: 0.5
@@ -85,8 +79,7 @@ export const BACKEND_FLAGS_MAP = {
 
 export const MODEL_BACKEND_MAP = {
   [posedetection.SupportedModels.PoseNet]: ['tfjs-webgl', 'tfjs-webgpu'],
-  [posedetection.SupportedModels.MoveNet]: ['tfjs-webgl', 'tfjs-wasm', 'tfjs-webgpu'],
-  [posedetection.SupportedModels.BlazePose]: ['mediapipe-gpu', 'tfjs-webgl', 'tfjs-webgpu']
+  [posedetection.SupportedModels.MoveNet]: ['tfjs-webgl', 'tfjs-webgpu']
 }
 
 export const TUNABLE_FLAG_NAME_MAP = {

@@ -49,19 +49,6 @@ async function createDetector() {
         inputResolution: {width: 500, height: 500},
         multiplier: 0.75
       });
-    case posedetection.SupportedModels.BlazePose:
-      const runtime = STATE.backend.split('-')[0];
-      if (runtime === 'mediapipe') {
-        return posedetection.createDetector(STATE.model, {
-          runtime,
-          modelType: STATE.modelConfig.type,
-          solutionPath:
-              `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}`
-        });
-      } else if (runtime === 'tfjs') {
-        return posedetection.createDetector(
-            STATE.model, {runtime, modelType: STATE.modelConfig.type});
-      }
     case posedetection.SupportedModels.MoveNet:
       let modelType;
       if (STATE.modelConfig.type == 'lightning') {
@@ -85,7 +72,7 @@ async function createDetector() {
 
 async function checkGuiUpdate() {
   if (STATE.isTargetFPSChanged || STATE.isSizeOptionChanged) {
-    camera = await Camera.setupCamera(STATE.camera);
+    camera = await Camera.setup(STATE.camera);
     STATE.isTargetFPSChanged = false;
     STATE.isSizeOptionChanged = false;
   }
