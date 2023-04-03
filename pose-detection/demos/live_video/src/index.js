@@ -66,7 +66,11 @@ async function createDetector() {
       if (STATE.modelConfig.type === 'multipose') {
         modelConfig.enableTracking = STATE.modelConfig.enableTracking;
       }
-      return posedetection.createDetector(STATE.model, modelConfig);
+      console.warn(`loading model from custom url; model switching will not work.`)
+      return posedetection.createDetector(STATE.model, {
+        ...modelConfig,
+        modelUrl: `${window.location.protocol}//${window.location.hostname}:${window.location.port}/models/my-model.json`
+      });
   }
 }
 
