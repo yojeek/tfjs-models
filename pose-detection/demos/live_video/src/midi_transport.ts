@@ -1,7 +1,5 @@
 import { Keypoint, calculators } from '@tensorflow-models/pose-detection';
 import { ImageSize } from '@tensorflow-models/pose-detection/shared/calculators/interfaces/common_interfaces';
-import { log } from 'console';
-import OSC from 'osc-js';
 
 type Pose = {
     score: number;
@@ -49,8 +47,11 @@ class MIDITransport {
                     return Math.floor(float * 127);
                 }
                 
-                this.midiOutput.send([NOTE_ON, floatToMidi(keypoint.x),  0x7f])
-                // send midi message
+                // pick midi channel based on keypoint index
+                const channelBase = j % 16 * 2;
+                // send note on
+                this.midiOutput.send([NOTE_ON + channelBase, floatToMidi(keypoint.x), 0x7f]);
+                this.midiOutput.send([NOTE_ON + channelBase + 1, floatToMidi(keypoint.y), 0x7f]);
             }
         }
     }
