@@ -56,9 +56,6 @@ export async function setupDatGui(urlParams) {
   const backendFromURL = urlParams.get('backend');
 
   switch (model) {
-    case 'posenet':
-      params.STATE.model = posedetection.SupportedModels.PoseNet;
-      break;
     case 'movenet':
       params.STATE.model = posedetection.SupportedModels.MoveNet;
       if (type !== 'lightning' && type !== 'thunder' && type !== 'multipose') {
@@ -72,7 +69,7 @@ export async function setupDatGui(urlParams) {
   }
 
   const modelController = modelFolder.add(
-      params.STATE, 'model', [posedetection.SupportedModels.MoveNet, posedetection.SupportedModels.PoseNet]
+      params.STATE, 'model', [posedetection.SupportedModels.MoveNet]
   );
 
   modelController.onChange(_ => {
@@ -133,24 +130,12 @@ function showModelConfigs(folderController, type) {
   }
 
   switch (params.STATE.model) {
-    case posedetection.SupportedModels.PoseNet:
-      addPoseNetControllers(folderController);
-      break;
     case posedetection.SupportedModels.MoveNet:
       addMoveNetControllers(folderController, type);
       break;
     default:
       alert(`Model ${params.STATE.model} is not supported.`);
   }
-}
-
-// The PoseNet model config folder contains options for PoseNet config
-// settings.
-function addPoseNetControllers(modelConfigFolder) {
-  params.STATE.modelConfig = {...params.POSENET_CONFIG};
-
-  modelConfigFolder.add(params.STATE.modelConfig, 'maxPoses', [1, 2, 3, 4, 5]);
-  modelConfigFolder.add(params.STATE.modelConfig, 'scoreThreshold', 0, 1);
 }
 
 // The MoveNet model config folder contains options for MoveNet config

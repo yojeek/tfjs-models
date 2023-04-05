@@ -23,13 +23,13 @@ import * as tf from '@tensorflow/tfjs-core';
 
 import * as posedetection from '@tensorflow-models/pose-detection';
 
-import {Camera} from './camera';
-import {RendererWebGPU} from './renderer_webgpu';
-import {RendererCanvas2d} from './renderer_canvas2d';
-import {setupDatGui} from './option_panel';
-import {STATE} from './params';
-import {setupStats} from './stats_panel';
-import {setBackendAndEnvFlags} from './util';
+import { Camera } from './camera';
+import { RendererWebGPU } from './renderer_webgpu';
+import { RendererCanvas2d } from './renderer_canvas2d';
+import { setupDatGui } from './option_panel';
+import { STATE } from './params';
+import { setupStats } from './stats_panel';
+import { setBackendAndEnvFlags } from './util';
 import OSCTransport from './osc_transport';
 import MIDITransport from './midi_transport';
 
@@ -38,18 +38,9 @@ let startInferenceTime, numInferences = 0;
 let inferenceTimeSum = 0, lastPanelUpdate = 0;
 let rafId;
 let renderer = null;
-let useGpuRenderer = false;
 
 async function createDetector() {
   switch (STATE.model) {
-    case posedetection.SupportedModels.PoseNet:
-      return posedetection.createDetector(STATE.model, {
-        quantBytes: 4,
-        architecture: 'MobileNetV1',
-        outputStride: 16,
-        inputResolution: {width: 500, height: 500},
-        multiplier: 0.75
-      });
     case posedetection.SupportedModels.MoveNet:
       let modelType;
       if (STATE.modelConfig.type == 'lightning') {
@@ -59,7 +50,7 @@ async function createDetector() {
       } else if (STATE.modelConfig.type == 'multipose') {
         modelType = posedetection.movenet.modelType.MULTIPOSE_LIGHTNING;
       }
-      const modelConfig = {modelType};
+      const modelConfig = { modelType };
 
       if (STATE.modelConfig.customModel !== '') {
         modelConfig.modelUrl = STATE.modelConfig.customModel;
@@ -123,7 +114,7 @@ function endEstimatePosesStats() {
     inferenceTimeSum = 0;
     numInferences = 0;
     stats.customFpsPanel.update(
-        1000.0 / averageInferenceTime, 120 /* maxValue */);
+      1000.0 / averageInferenceTime, 120 /* maxValue */);
     lastPanelUpdate = endInferenceTime;
   }
 }
@@ -146,24 +137,12 @@ async function renderResult() {
     // FPS only counts the time it takes to finish estimatePoses.
     beginEstimatePosesStats();
 
-    if (useGpuRenderer && STATE.model !== 'PoseNet') {
-      throw new Error('Only PoseNet supports GPU renderer!');
-    }
     // Detectors can throw errors, for example when using custom URLs that
     // contain a model that doesn't provide the expected output.
     try {
-      if (useGpuRenderer) {
-        const [posesTemp, canvasInfoTemp] = await detector.estimatePosesGPU(
-            camera.video,
-            {maxPoses: STATE.modelConfig.maxPoses, flipHorizontal: false},
-            true);
-        poses = posesTemp;
-        canvasInfo = canvasInfoTemp;
-      } else {
-        poses = await detector.estimatePoses(
-            camera.video,
-            {maxPoses: STATE.modelConfig.maxPoses, flipHorizontal: false});
-      }
+      poses = await detector.estimatePoses(
+        camera.video,
+        { maxPoses: STATE.modelConfig.maxPoses, flipHorizontal: false });
     } catch (error) {
       detector.dispose();
       detector = null;
@@ -173,13 +152,11 @@ async function renderResult() {
     endEstimatePosesStats();
   }
 
-  const rendererParams = useGpuRenderer ?
-      [camera.video, poses, canvasInfo, STATE.modelConfig.scoreThreshold] :
-      [camera.video, poses, STATE.isModelChanged];
+  const rendererParams = [camera.video, poses, STATE.isModelChanged];
 
   renderer.draw(rendererParams);
 
-  osc.transmitPoses(poses, { width: camera.video.width, height: camera.video.height}, STATE.modelConfig.scoreThreshold);
+  osc.transmitPoses(poses, { width: camera.video.width, height: camera.video.height }, STATE.modelConfig.scoreThreshold);
 }
 
 async function renderPrediction() {
@@ -213,12 +190,7 @@ async function app() {
   const canvas = document.getElementById('output');
   canvas.width = camera.video.width;
   canvas.height = camera.video.height;
-  useGpuRenderer = (urlParams.get('gpuRenderer') === 'true') && isWebGPU;
-  if (useGpuRenderer) {
-    renderer = new RendererWebGPU(canvas, importVideo);
-  } else {
-    renderer = new RendererCanvas2d(canvas);
-  }
+  renderer = new RendererCanvas2d(canvas);
 
   renderPrediction();
 };
@@ -227,7 +199,3 @@ const osc = new OSCTransport();
 const midi = new MIDITransport;
 
 app();
-
-if (useGpuRenderer) {
-  renderer.dispose();
-}

@@ -8,8 +8,8 @@
       "type": "chrome",
       "request": "launch",
       "name": "Launch Chrome against localhost",
-      "url": "http://localhost:1234/?model=movenet",
-      "webRoot": "${workspaceFolder}",
+      "url": "https://localhost:1234/?model=movenet",
+      "webRoot": "${workspaceFolder}/src",
       "sourceMapPathOverrides": {
         "/__parcel_source_root/*": "${webRoot}/*"
       }

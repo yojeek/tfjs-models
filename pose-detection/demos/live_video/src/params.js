@@ -31,10 +31,6 @@ export const STATE = {
   flags: {},
   modelConfig: {}
 };
-export const POSENET_CONFIG = {
-  maxPoses: 1,
-  scoreThreshold: 0.5
-};
 export const MOVENET_CONFIG = {
   maxPoses: 1,
   type: 'lightning',
@@ -78,7 +74,6 @@ export const BACKEND_FLAGS_MAP = {
 };
 
 export const MODEL_BACKEND_MAP = {
-  [posedetection.SupportedModels.PoseNet]: ['tfjs-webgl', 'tfjs-webgpu'],
   [posedetection.SupportedModels.MoveNet]: ['tfjs-webgl', 'tfjs-webgpu']
 }
 
