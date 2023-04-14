@@ -18,13 +18,9 @@
 import '@tensorflow/tfjs-backend-webgl';
 import '@tensorflow/tfjs-backend-webgpu';
 
-import * as mpPose from '@mediapipe/pose';
-import * as tf from '@tensorflow/tfjs-core';
-
 import * as posedetection from '@tensorflow-models/pose-detection';
 
 import { Camera } from './camera';
-import { RendererWebGPU } from './renderer_webgpu';
 import { RendererCanvas2d } from './renderer_canvas2d';
 import { setupDatGui } from './option_panel';
 import { STATE } from './params';
@@ -32,6 +28,7 @@ import { setupStats } from './stats_panel';
 import { setBackendAndEnvFlags } from './util';
 import OSCTransport from './osc_transport';
 import MIDITransport from './midi_transport';
+import { PoseClassifierHelper } from './pose_classifier_helper';
 
 let detector, camera, stats;
 let startInferenceTime, numInferences = 0;
@@ -129,7 +126,6 @@ async function renderResult() {
   }
 
   let poses = null;
-  let canvasInfo = null;
 
   // Detector can be null if initialization failed (for example when loading
   // from a URL that does not exist).
@@ -142,11 +138,18 @@ async function renderResult() {
     try {
       poses = await detector.estimatePoses(
         camera.video,
-        { maxPoses: STATE.modelConfig.maxPoses, flipHorizontal: false });
+        { maxPoses: STATE.modelConfig.maxPoses, flipHorizontal: false }
+      );
     } catch (error) {
       detector.dispose();
       detector = null;
       alert(error);
+    }
+
+    if (poses.length) {
+      STATE.lastKeyPoints = posedetection.calculators.keypointsToNormalizedKeypoints(poses[0].keypoints, { width: camera.video.width, height: camera.video.height });
+    } else {
+      STATE.lastKeyPoints = null;
     }
 
     endEstimatePosesStats();
@@ -176,12 +179,10 @@ async function app() {
     alert('Cannot find model in the query string.');
     return;
   }
-  await setupDatGui(urlParams);
+  const gui = await setupDatGui(urlParams);
+  poseClassifierHelper.addGuiElements(gui);
 
   stats = setupStats();
-  const isWebGPU = STATE.backend === 'tfjs-webgpu';
-  const importVideo = (urlParams.get('importVideo') === 'true') && isWebGPU;
-
   camera = await Camera.setup(STATE.camera);
 
   await setBackendAndEnvFlags(STATE.flags, STATE.backend);
@@ -197,5 +198,6 @@ async function app() {
 
 const osc = new OSCTransport();
 const midi = new MIDITransport;
+const poseClassifierHelper = new PoseClassifierHelper(STATE);
 
 app();

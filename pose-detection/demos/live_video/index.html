@@ -31,6 +31,27 @@ limitations under the License.
     #scatter-gl-container {
       position: relative;
     }
+    .canvas-wrapper {
+      position: relative;
+    }
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .overlay-center-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      font-size: 60px;
+      color: #fff;
+      z-index: 1;
+    }
   </style>
 </head>
 <body>
@@ -38,6 +59,10 @@ limitations under the License.
   <div id="main">
     <div class="container">
       <div class="canvas-wrapper">
+        <div class="overlay">
+          <div id="overlay-text" class="overlay-center-text">
+          </div>
+        </div>
         <canvas id="output"></canvas>
         <video id="video" playsinline style="
           -webkit-transform: scaleX(-1);

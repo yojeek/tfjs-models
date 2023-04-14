@@ -15,7 +15,6 @@
  * =============================================================================
  */
 import * as posedetection from '@tensorflow-models/pose-detection';
-import {isiOS} from './util';
 
 export const DEFAULT_LINE_WIDTH = 2;
 export const DEFAULT_RADIUS = 4;
@@ -29,7 +28,12 @@ export const STATE = {
   camera: {targetFPS: 60, sizeOption: '640 X 480'},
   backend: '',
   flags: {},
-  modelConfig: {}
+  modelConfig: {},
+  classifier: {
+    poseName: ''
+  },
+  // normalized keypoints from last predicted pose
+  lastKeyPoints: [],
 };
 export const MOVENET_CONFIG = {
   maxPoses: 1,
