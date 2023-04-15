@@ -118,12 +118,8 @@ function endEstimatePosesStats() {
 }
 
 async function renderResult() {
-  if (camera.video.readyState < 2) {
-    await new Promise((resolve) => {
-      camera.video.onloadeddata = () => {
-        resolve(video);
-      };
-    });
+  if (!camera ||camera.video.readyState < 2) {
+    return;
   }
 
   let poses = null;
@@ -139,7 +135,10 @@ async function renderResult() {
     try {
       poses = await detector.estimatePoses(
         camera.video,
-        { maxPoses: STATE.modelConfig.maxPoses, flipHorizontal: false }
+        {
+          maxPoses: STATE.modelConfig.maxPoses,
+          flipHorizontal: false
+        }
       );
     } catch (error) {
       detector.dispose();
@@ -163,22 +162,27 @@ async function renderResult() {
   osc.transmitPoses(poses, { width: camera.video.width, height: camera.video.height }, STATE.modelConfig.scoreThreshold);
 }
 
-async function renderPrediction() {
-  if (camera && STATE.camera.enabled) {
-    await checkGuiUpdate();
+async function runFrame() {
+  await checkGuiUpdate();
 
-    if (!STATE.isModelChanged) {
-      await renderResult();
+  if (STATE.camera.enabled) {
+
+  } else {
+    // loop video
+    if (video && video.paused) {
+      video.play();
     }
   }
 
-  rafId = requestAnimationFrame(renderPrediction);
-};
+  if (!STATE.isModelChanged) {
+    await renderResult();
+  }
+
+  rafId = requestAnimationFrame(runFrame);
+}
 
 async function app() {
-  STATE.camera.runCamera = () => {
-    runCamera();
-  };
+  STATE.camera.runCamera = () => { runCamera() };
 
   const gui = await setupDatGui();
   stats = setupStats();
@@ -196,24 +200,17 @@ async function app() {
   const uploadButton = document.getElementById('videofile');
   uploadButton.onchange = updateVideo;
 
-  renderPrediction();
+  runFrame();
 };
 
 async function runCamera() {
-  try {
-    stopVideo();
-  } catch(e) {
-    //console.warn(e);
-  }
-  
   // Clear reference to any previous uploaded video.
-  if (camera?.video?.currentSrc) {
+  if (camera?.video) {
     URL.revokeObjectURL(camera.video.currentSrc);
     camera.source.src = '';
   }
 
   camera = await Camera.setup(STATE.camera);
-  camera.video.style.visibility = 'hidden';
   const canvas = document.getElementById('output');
   canvas.width = camera.video.width;
   canvas.height = camera.video.height;
@@ -236,6 +233,10 @@ const statusElement = document.getElementById('status');
 async function runVideo() {
   camera = new Context();
 
+  if (camera?.video) {
+    camera.video.srcObject = null;
+  }
+
   camera.source.src = URL.createObjectURL(STATE.video.file);
 
   // Wait for video to be loaded.
@@ -253,6 +254,7 @@ async function runVideo() {
   camera.video.height = videoHeight;
   camera.canvas.width = videoWidth;
   camera.canvas.height = videoHeight;
+  renderer = new RendererCanvas2d(camera.canvas);
 
   STATE.camera.enabled = false;
   statusElement.innerHTML = 'Warming up model.';
@@ -270,66 +272,10 @@ async function runVideo() {
     statusElement.innerHTML = 'Model is warmed up.';
   }
 
-  camera.video.style.visibility = 'hidden';
   video = camera.video;
   video.pause();
   video.currentTime = 0;
   video.play();
-  camera.mediaRecorder.start();
-
-  await new Promise((resolve) => {
-    camera.video.onseeked = () => {
-      resolve(video);
-    };
-  });
-
-  await runFrame();
-}
-
-function stopVideo() {
-  camera.mediaRecorder.stop();
-  camera.clearCtx();
-  camera.video.style.visibility = 'visible';
-}
-
-async function runFrame() {
-  await checkGuiUpdate();
-
-  if (STATE.camera.enabled) {
-    stopVideo();
-    return;
-  }
-
-  if (!STATE.camera.enabled) {
-    if (video.paused) {
-      video.play();
-    }
-    await renderVideoResult();
-  }
-
-  rafId = requestAnimationFrame(runFrame);
-}
-
-async function renderVideoResult() {
-  // FPS only counts the time it takes to finish estimatePoses.
-  beginEstimatePosesStats();
-
-  const poses = await detector.estimatePoses(
-    camera.video,
-    { maxPoses: STATE.modelConfig.maxPoses, flipHorizontal: false });
-
-  endEstimatePosesStats();
-
-  camera.drawCtx();
-
-  // The null check makes sure the UI is not in the middle of changing to a
-  // different model. If during model change, the result is from an old
-  // model, which shouldn't be rendered.
-  if (poses.length > 0 && !STATE.isModelChanged) {
-    camera.drawResults(poses);
-  }
-
-  osc.transmitPoses(poses, { width: camera.video.width, height: camera.video.height }, STATE.modelConfig.scoreThreshold);
 }
 
 
