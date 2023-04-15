@@ -18,9 +18,10 @@
 import '@tensorflow/tfjs-backend-webgl';
 import '@tensorflow/tfjs-backend-webgpu';
 
+import * as tf from '@tensorflow/tfjs-core';
 import * as posedetection from '@tensorflow-models/pose-detection';
 
-import { Camera } from './camera';
+import { Camera, Context } from './camera';
 import { RendererCanvas2d } from './renderer_canvas2d';
 import { setupDatGui } from './option_panel';
 import { STATE } from './params';
@@ -163,38 +164,174 @@ async function renderResult() {
 }
 
 async function renderPrediction() {
-  await checkGuiUpdate();
+  if (camera && STATE.camera.enabled) {
+    await checkGuiUpdate();
 
-  if (!STATE.isModelChanged) {
-    await renderResult();
+    if (!STATE.isModelChanged) {
+      await renderResult();
+    }
   }
 
   rafId = requestAnimationFrame(renderPrediction);
 };
 
 async function app() {
-  // Gui content will change depending on which model is in the query string.
-  const urlParams = new URLSearchParams(window.location.search);
-  if (!urlParams.has('model')) {
-    alert('Cannot find model in the query string.');
-    return;
-  }
-  const gui = await setupDatGui(urlParams);
-  poseClassifierHelper.addGuiElements(gui);
+  STATE.camera.runCamera = () => {
+    runCamera();
+  };
 
+  const gui = await setupDatGui();
   stats = setupStats();
-  camera = await Camera.setup(STATE.camera);
+
+  if (poseClassifierHelper) {
+    poseClassifierHelper.addGuiElements(gui);
+  }
 
   await setBackendAndEnvFlags(STATE.flags, STATE.backend);
-
   detector = await createDetector();
+
+  const runButton = document.getElementById('submit');
+  runButton.onclick = runVideo;
+
+  const uploadButton = document.getElementById('videofile');
+  uploadButton.onchange = updateVideo;
+
+  renderPrediction();
+};
+
+async function runCamera() {
+  try {
+    stopVideo();
+  } catch(e) {
+    //console.warn(e);
+  }
+  
+  // Clear reference to any previous uploaded video.
+  if (camera?.video?.currentSrc) {
+    URL.revokeObjectURL(camera.video.currentSrc);
+    camera.source.src = '';
+  }
+
+  camera = await Camera.setup(STATE.camera);
+  camera.video.style.visibility = 'hidden';
   const canvas = document.getElementById('output');
   canvas.width = camera.video.width;
   canvas.height = camera.video.height;
   renderer = new RendererCanvas2d(canvas);
+  STATE.camera.enabled = true;
+}
 
-  renderPrediction();
-};
+async function updateVideo(event) {
+  // Clear reference to any previous uploaded video.
+  if (camera?.video?.currentSrc) {
+    URL.revokeObjectURL(camera.video.currentSrc);
+  }
+
+  STATE.video.file = event.target.files[0];
+}
+
+let video;
+const statusElement = document.getElementById('status');
+
+async function runVideo() {
+  camera = new Context();
+
+  camera.source.src = URL.createObjectURL(STATE.video.file);
+
+  // Wait for video to be loaded.
+  camera.video.load();
+  await new Promise((resolve) => {
+    camera.video.onloadeddata = () => {
+      resolve(video);
+    };
+  });
+
+  const videoWidth = camera.video.videoWidth;
+  const videoHeight = camera.video.videoHeight;
+  // Must set below two lines, otherwise video element doesn't show.
+  camera.video.width = videoWidth;
+  camera.video.height = videoHeight;
+  camera.canvas.width = videoWidth;
+  camera.canvas.height = videoHeight;
+
+  STATE.camera.enabled = false;
+  statusElement.innerHTML = 'Warming up model.';
+
+  // Warming up pipeline.
+  const [runtime, $backend] = STATE.backend.split('-');
+
+  if (runtime === 'tfjs') {
+    const warmUpTensor =
+      tf.fill([camera.video.height, camera.video.width, 3], 0, 'float32');
+    await detector.estimatePoses(
+      warmUpTensor,
+      { maxPoses: STATE.modelConfig.maxPoses, flipHorizontal: false });
+    warmUpTensor.dispose();
+    statusElement.innerHTML = 'Model is warmed up.';
+  }
+
+  camera.video.style.visibility = 'hidden';
+  video = camera.video;
+  video.pause();
+  video.currentTime = 0;
+  video.play();
+  camera.mediaRecorder.start();
+
+  await new Promise((resolve) => {
+    camera.video.onseeked = () => {
+      resolve(video);
+    };
+  });
+
+  await runFrame();
+}
+
+function stopVideo() {
+  camera.mediaRecorder.stop();
+  camera.clearCtx();
+  camera.video.style.visibility = 'visible';
+}
+
+async function runFrame() {
+  await checkGuiUpdate();
+
+  if (STATE.camera.enabled) {
+    stopVideo();
+    return;
+  }
+
+  if (!STATE.camera.enabled) {
+    if (video.paused) {
+      video.play();
+    }
+    await renderVideoResult();
+  }
+
+  rafId = requestAnimationFrame(runFrame);
+}
+
+async function renderVideoResult() {
+  // FPS only counts the time it takes to finish estimatePoses.
+  beginEstimatePosesStats();
+
+  const poses = await detector.estimatePoses(
+    camera.video,
+    { maxPoses: STATE.modelConfig.maxPoses, flipHorizontal: false });
+
+  endEstimatePosesStats();
+
+  camera.drawCtx();
+
+  // The null check makes sure the UI is not in the middle of changing to a
+  // different model. If during model change, the result is from an old
+  // model, which shouldn't be rendered.
+  if (poses.length > 0 && !STATE.isModelChanged) {
+    camera.drawResults(poses);
+  }
+
+  osc.transmitPoses(poses, { width: camera.video.width, height: camera.video.height }, STATE.modelConfig.scoreThreshold);
+}
+
 
 const osc = new OSCTransport();
 const midi = new MIDITransport;

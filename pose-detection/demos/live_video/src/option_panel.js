@@ -31,12 +31,13 @@ let scoreThresholdController;
 const stringValueMap = {};
 let backendFolder;
 
-export async function setupDatGui(urlParams) {
+export async function setupDatGui() {
   const gui = new dat.GUI({ width: 300 });
   gui.domElement.id = 'gui';
 
   // The camera folder contains options for video settings.
   const cameraFolder = gui.addFolder('Camera');
+  cameraFolder.add(params.STATE.camera, 'runCamera');
   const fpsController = cameraFolder.add(params.STATE.camera, 'targetFPS');
   fpsController.onFinishChange((_) => {
     params.STATE.isTargetFPSChanged = true;
@@ -51,22 +52,7 @@ export async function setupDatGui(urlParams) {
   // The model folder contains options for model selection.
   const modelFolder = gui.addFolder('Model');
 
-  const model = urlParams.get('model');
-  let type = urlParams.get('type');
-  const backendFromURL = urlParams.get('backend');
-
-  switch (model) {
-    case 'movenet':
-      params.STATE.model = posedetection.SupportedModels.MoveNet;
-      if (type !== 'lightning' && type !== 'thunder' && type !== 'multipose') {
-        // Nulify invalid value.
-        type = null;
-      }
-      break;
-    default:
-      alert(`${urlParams.get('model')}`);
-      break;
-  }
+  params.STATE.model = posedetection.SupportedModels.MoveNet;
 
   const modelController = modelFolder.add(
     params.STATE, 'model', [posedetection.SupportedModels.MoveNet]
@@ -78,12 +64,12 @@ export async function setupDatGui(urlParams) {
     showBackendConfigs(backendFolder);
   });
 
-  showModelConfigs(modelFolder, type);
+  showModelConfigs(modelFolder, null);
 
   modelFolder.open();
 
   backendFolder = gui.addFolder('Backend');
-  params.STATE.backend = backendFromURL;
+  params.STATE.backend = null;
 
   showBackendConfigs(backendFolder);
 
