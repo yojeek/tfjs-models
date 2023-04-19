@@ -16,7 +16,6 @@
  */
 import * as params from './params';
 import { isMobile } from './util';
-import * as posedetection from '@tensorflow-models/pose-detection';
 
 export class Camera {
   constructor() {

@@ -49,18 +49,26 @@ const COLOR_PALETTE = [
   '#ffe119', '#911eb4', '#bfef45', '#f032e6', '#3cb44b', '#a9a9a9'
 ];
 export class RendererCanvas2d {
-  constructor(canvas) {
+  constructor(canvas, scatterGLEl) {
     this.ctx = canvas.getContext('2d');
-    this.scatterGLEl = document.querySelector('#scatter-gl-container');
-    this.scatterGL = new scatter.ScatterGL(this.scatterGLEl, {
-      'rotateOnStart': true,
-      'selectEnabled': false,
-      'styles': {polyline: {defaultOpacity: 1, deselectedOpacity: 1}}
-    });
+    
+
+    if (scatterGLEl) {
+      this.scatterGLEl = scatterGLEl;
+      this.scatterGL = new scatter.ScatterGL(this.scatterGLEl, {
+        'rotateOnStart': true,
+        'selectEnabled': false,
+        'styles': {polyline: {defaultOpacity: 1, deselectedOpacity: 1}}
+      });
+    }
+
     this.scatterGLHasInitialized = false;
     this.videoWidth = canvas.width;
     this.videoHeight = canvas.height;
-    this.flip(this.videoWidth, this.videoHeight);
+
+    if (scatterGLEl) {
+      this.flip(this.videoWidth, this.videoHeight);
+    }
   }
 
   flip(videoWidth, videoHeight) {
@@ -124,7 +132,7 @@ export class RendererCanvas2d {
    * Draw the keypoints on the video.
    * @param keypoints A list of keypoints.
    */
-  drawKeypoints(keypoints) {
+  drawKeypoints(keypoints, scaleBack = false) {
     const keypointInd =
         posedetection.util.getKeypointIndexBySide(params.STATE.model);
     this.ctx.fillStyle = 'Red';
@@ -132,28 +140,30 @@ export class RendererCanvas2d {
     this.ctx.lineWidth = params.DEFAULT_LINE_WIDTH;
 
     for (const i of keypointInd.middle) {
-      this.drawKeypoint(keypoints[i]);
+      this.drawKeypoint(keypoints[i], scaleBack);
     }
 
     this.ctx.fillStyle = 'Green';
     for (const i of keypointInd.left) {
-      this.drawKeypoint(keypoints[i]);
+      this.drawKeypoint(keypoints[i], scaleBack);
     }
 
     this.ctx.fillStyle = 'Orange';
     for (const i of keypointInd.right) {
-      this.drawKeypoint(keypoints[i]);
+      this.drawKeypoint(keypoints[i], scaleBack);
     }
   }
 
-  drawKeypoint(keypoint) {
+  drawKeypoint(keypoint, scaleBack = false) {
     // If score is null, just show the keypoint.
     const score = keypoint.score != null ? keypoint.score : 1;
     const scoreThreshold = params.STATE.modelConfig.scoreThreshold || 0;
 
     if (score >= scoreThreshold) {
       const circle = new Path2D();
-      circle.arc(keypoint.x, keypoint.y, params.DEFAULT_RADIUS, 0, 2 * Math.PI);
+      const x = scaleBack ? keypoint.x * this.videoWidth : keypoint.x;
+      const y = scaleBack ? keypoint.y * this.videoHeight : keypoint.y;
+      circle.arc(x, y, params.DEFAULT_RADIUS, 0, 2 * Math.PI);
       this.ctx.fill(circle);
       this.ctx.stroke(circle);
     }

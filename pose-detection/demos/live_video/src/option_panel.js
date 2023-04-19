@@ -165,10 +165,16 @@ function addMoveNetControllers(modelConfigFolder, type) {
   scoreThresholdController =
     modelConfigFolder.add(params.STATE.modelConfig, 'scoreThreshold', 0, 1);
 
+  modelConfigFolder.add(
+    params.STATE.modelConfig,
+    'scalePose',
+  );
+
   enableTrackingController = modelConfigFolder.add(
     params.STATE.modelConfig,
     'enableTracking',
   );
+
   enableTrackingController.onChange(_ => {
     // Set isModelChanged to true, so that we don't render any result during
     // changing models.

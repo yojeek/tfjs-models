@@ -52,6 +52,13 @@ limitations under the License.
       color: #fff;
       z-index: 1;
     }
+    #output_debug {
+      width: 200px;
+      height: 200px;
+      border: 1px solid black;
+      margin-top: 10px;
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
@@ -71,20 +78,19 @@ limitations under the License.
           </div>
         </div>
         <canvas id="output"></canvas>
-        <video id="video" playsinline style="
+        <video id="video" playsinline muted style="
           -webkit-transform: scaleX(-1);
           transform: scaleX(-1);
           visibility: hidden;
           width: auto;
           height: auto;
           ">
-            <source id="currentVID" src="" type="video/mp4">
         </video>
       </div>
       <div id="scatter-gl-container"></div>
     </div>
     <div class="container">
-      <span id="status"></span>
+    <canvas id="output_debug"></canvas>
     </div>
   </div>
 </body>

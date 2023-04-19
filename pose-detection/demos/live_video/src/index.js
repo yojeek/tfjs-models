@@ -159,7 +159,11 @@ async function renderResult() {
 
   renderer.draw(rendererParams);
 
-  osc.transmitPoses(poses, { width: camera.video.width, height: camera.video.height }, STATE.modelConfig.scoreThreshold);
+  osc.transmitPoses(poses, { width: camera.video.width, height: camera.video.height }, {
+    scoreThreshold: STATE.modelConfig.scoreThreshold,
+    scalePose: STATE.modelConfig.scalePose || false,
+    outputDebug: output_debug
+  });
 }
 
 async function runFrame() {
@@ -200,6 +204,7 @@ async function app() {
   const uploadButton = document.getElementById('videofile');
   uploadButton.onchange = updateVideo;
 
+  await runCamera();
   runFrame();
 };
 
@@ -207,14 +212,14 @@ async function runCamera() {
   // Clear reference to any previous uploaded video.
   if (camera?.video) {
     URL.revokeObjectURL(camera.video.currentSrc);
-    camera.source.src = '';
+    camera.video.src = '';
   }
 
   camera = await Camera.setup(STATE.camera);
   const canvas = document.getElementById('output');
   canvas.width = camera.video.width;
   canvas.height = camera.video.height;
-  renderer = new RendererCanvas2d(canvas);
+  renderer = new RendererCanvas2d(canvas, document.querySelector('#scatter-gl-container'));
   STATE.camera.enabled = true;
 }
 
@@ -228,7 +233,6 @@ async function updateVideo(event) {
 }
 
 let video;
-const statusElement = document.getElementById('status');
 
 async function runVideo() {
   camera = new Context();
@@ -237,7 +241,7 @@ async function runVideo() {
     camera.video.srcObject = null;
   }
 
-  camera.source.src = URL.createObjectURL(STATE.video.file);
+  camera.video.src = URL.createObjectURL(STATE.video.file);
 
   // Wait for video to be loaded.
   camera.video.load();
@@ -257,7 +261,6 @@ async function runVideo() {
   renderer = new RendererCanvas2d(camera.canvas);
 
   STATE.camera.enabled = false;
-  statusElement.innerHTML = 'Warming up model.';
 
   // Warming up pipeline.
   const [runtime, $backend] = STATE.backend.split('-');
@@ -269,7 +272,6 @@ async function runVideo() {
       warmUpTensor,
       { maxPoses: STATE.modelConfig.maxPoses, flipHorizontal: false });
     warmUpTensor.dispose();
-    statusElement.innerHTML = 'Model is warmed up.';
   }
 
   video = camera.video;
@@ -282,5 +284,7 @@ async function runVideo() {
 const osc = new OSCTransport();
 const midi = new MIDITransport;
 const poseClassifierHelper = new PoseClassifierHelper(STATE);
+
+const output_debug = new RendererCanvas2d(document.getElementById('output_debug'));
 
 app();
