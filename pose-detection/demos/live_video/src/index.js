@@ -258,6 +258,8 @@ async function runVideo() {
   camera.video.height = videoHeight;
   camera.canvas.width = videoWidth;
   camera.canvas.height = videoHeight;
+  const canvasContainer = document.querySelector('.canvas-wrapper');
+  canvasContainer.style = `width: ${videoWidth}px; height: ${videoHeight}px`;
   renderer = new RendererCanvas2d(camera.canvas);
 
   STATE.camera.enabled = false;
