@@ -133,6 +133,7 @@ export class RendererCanvas2d {
    * @param keypoints A list of keypoints.
    */
   drawKeypoints(keypoints, scaleBack = false) {
+    this.isDrawing = true;
     const keypointInd =
         posedetection.util.getKeypointIndexBySide(params.STATE.model);
     this.ctx.fillStyle = 'Red';
@@ -152,6 +153,7 @@ export class RendererCanvas2d {
     for (const i of keypointInd.right) {
       this.drawKeypoint(keypoints[i], scaleBack);
     }
+    this.isDrawing = false;
   }
 
   drawKeypoint(keypoint, scaleBack = false) {

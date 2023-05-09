@@ -919,9 +919,9 @@
   integrity sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==
 
 "@mediapipe/pose@~0.4.0":
-  version "0.4.1630009814"
-  resolved "https://registry.npmjs.org/@mediapipe/pose/-/pose-0.4.1630009814.tgz#ca09e84f522a4eabd4ad32c56832328c175638ec"
-  integrity sha512-sJ1PLdKcpND3Qy+TX/jcu09Qgkkvncf5floXls8xmrSX2OQWzL4G55Wu+bXUm9eUc0y9tsP+wbkt0HI4Y7qx4g==
+  version "0.4.1633558788"
+  resolved "https://registry.yarnpkg.com/@mediapipe/pose/-/pose-0.4.1633558788.tgz#8af58433b4121278daf33b30ba0d1407a24edcea"
+  integrity sha512-tD89b08CE6tF3lNNFfFTd8o4E9iOD4uKqQ++AbDv9GOImnUx5iMkMWnadQjav2sYGJ1V3qUtiHLLKfmUAW6WBg==
 
 "@mrmlnc/readdir-enhanced@^2.2.1":
   version "2.2.1"

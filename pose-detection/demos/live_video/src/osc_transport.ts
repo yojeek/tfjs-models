@@ -18,6 +18,10 @@ class OSCTransport {
     }
 
     public transmitPoses(poses: Pose[], frameSize: ImageSize, { scoreThreshold, scalePose = false, outputDebug}) {
+        if (outputDebug) {
+            !outputDebug.isDrawing && outputDebug.clearCtx();
+        }
+
         for (let i = 0; i < poses.length; i++) {
             const pose = poses[i];
             let keypoints = calculators.keypointsToNormalizedKeypoints(pose.keypoints, frameSize);
@@ -27,7 +31,6 @@ class OSCTransport {
             }
 
             if (outputDebug) {
-                outputDebug.clearCtx();
                 outputDebug.drawKeypoints(keypoints, true);
             }
             

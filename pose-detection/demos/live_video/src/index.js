@@ -40,14 +40,18 @@ let renderer = null;
 async function createDetector() {
   switch (STATE.model) {
     case posedetection.SupportedModels.MoveNet:
-      let modelType;
+      let modelType, modelLocalPath;
+
       if (STATE.modelConfig.type == 'lightning') {
         modelType = posedetection.movenet.modelType.SINGLEPOSE_LIGHTNING;
+        modelLocalPath = 'models/movenet_single_lightning/my-model.json';
       } else if (STATE.modelConfig.type == 'thunder') {
         modelType = posedetection.movenet.modelType.SINGLEPOSE_THUNDER;
       } else if (STATE.modelConfig.type == 'multipose') {
         modelType = posedetection.movenet.modelType.MULTIPOSE_LIGHTNING;
+        modelLocalPath = 'models/movenet_multi_lightning/my-model.json';
       }
+
       const modelConfig = { modelType };
 
       if (STATE.modelConfig.customModel !== '') {
@@ -56,11 +60,16 @@ async function createDetector() {
       if (STATE.modelConfig.type === 'multipose') {
         modelConfig.enableTracking = STATE.modelConfig.enableTracking;
       }
-      console.warn(`loading model from custom url; model switching will not work.`)
-      return posedetection.createDetector(STATE.model, {
-        ...modelConfig,
-        modelUrl: `${window.location.protocol}//${window.location.hostname}:${window.location.port}/models/my-model.json`
-      });
+
+      if (modelLocalPath) {
+        return posedetection.createDetector(STATE.model, {
+          ...modelConfig,
+          modelUrl: `${window.location.protocol}//${window.location.hostname}:${window.location.port}/${modelLocalPath}`
+        })
+      } else {
+        return posedetection.createDetector(STATE.model, modelConfig);
+      }
+
   }
 }
 
@@ -118,7 +127,7 @@ function endEstimatePosesStats() {
 }
 
 async function renderResult() {
-  if (!camera ||camera.video.readyState < 2) {
+  if (!camera || camera.video.readyState < 2) {
     return;
   }
 
@@ -204,7 +213,7 @@ async function app() {
   const uploadButton = document.getElementById('videofile');
   uploadButton.onchange = updateVideo;
 
-  await runCamera();
+  //await runCamera();
   runFrame();
 };
 

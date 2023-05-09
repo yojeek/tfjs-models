@@ -526,6 +526,9 @@ export async function load(modelConfig: MoveNetModelConfig = MOVENET_CONFIG):
     model = await tfc.loadGraphModel(modelUrl, {fromTFHub});
   }
 
+  // uncomment and rebuild demo if you want to save model locally
+  // await model.save('downloads://my-model');
+
   if (tf.getBackend() === 'webgl') {
     // MoveNet has a top-k op that runs faster on GPU for the size of our last
     // dimension (6400). There are three checks that could make the top-k op run
