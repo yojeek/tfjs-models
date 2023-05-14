@@ -15,10 +15,9 @@
  * =============================================================================
  */
 
-import '@tensorflow/tfjs-backend-webgl';
 import '@tensorflow/tfjs-backend-webgpu';
 
-import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 import * as posedetection from '@tensorflow-models/pose-detection';
 
 import { Camera, Context } from './camera';
@@ -173,6 +172,10 @@ async function renderResult() {
     scalePose: STATE.modelConfig.scalePose || false,
     outputDebug: output_debug
   });
+
+  if (poseClassifierHelper) {
+    poseClassifierHelper.predict();
+  }
 }
 
 async function runFrame() {
@@ -195,6 +198,7 @@ async function runFrame() {
 }
 
 async function app() {
+
   STATE.camera.runCamera = () => { runCamera() };
 
   const gui = await setupDatGui();

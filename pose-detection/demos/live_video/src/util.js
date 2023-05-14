@@ -14,7 +14,7 @@
  * limitations under the License.
  * =============================================================================
  */
-import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 import {showBackendConfigs} from './option_panel';
 import {STATE, TUNABLE_FLAG_VALUE_RANGE_MAP} from './params';
 

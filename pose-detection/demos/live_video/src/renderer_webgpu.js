@@ -16,9 +16,7 @@
  */
 
 import '@tensorflow/tfjs-backend-webgl';
-import * as tfwebgpu from '@tensorflow/tfjs-backend-webgpu';
-
-import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 function getDevice(canvas) {
   const device = tf.backend().device;

@@ -15,7 +15,7 @@
  * =============================================================================
  */
 import * as posedetection from '@tensorflow-models/pose-detection';
-import * as tf from '@tensorflow/tfjs-core';
+import * as tf from '@tensorflow/tfjs';
 
 import * as params from './params';
 

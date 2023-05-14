@@ -20,30 +20,66 @@ class PoseClassifierHelper {
 
         classifierFolder.add(this, 'currentPoseName');
         classifierFolder.add(this, 'collect');
+        classifierFolder.add(this, 'saveToStorage');
+        classifierFolder.add(this, 'loadFromStorage');
+        classifierFolder.add(this, 'train');
 
         classifierFolder.open();
+    }
+
+    saveToStorage() {
+        this.classifier.saveToStorage();
+    }
+
+    loadFromStorage() {
+        this.classifier.getFromStorage();
+    }
+
+    async train() {
+        console.log('Loading poses data from storage.');
+        this.classifier.getFromStorage();
+        console.log('Training...');
+        await this.classifier.train();
+    }
+
+    async predict() {
+        const overlayText = document.getElementById('overlay-text');
+
+
+        const keypoints = this.STATE.lastKeyPoints;
+        if (keypoints && this.classifier.model) {
+            const label = await this.classifier.predict(keypoints);
+            console.log(`Predicted label: ${label}`);
+
+            if (overlayText) {
+                overlayText.innerHTML = 'Predicted label ' + label || '';
+            }
+        }
     }
 
     async collect() {
         const overlayText = document.getElementById('overlay-text');
 
-        // countdown 10 seconds
+        if (!overlayText) {
+            console.error('overlay-text element not found');
+            return;            
+        }
+
         async function countdown(seconds) {
             for (let i = seconds; i >= 0; i--) {
-                overlayText.innerHTML = `Prepare to collect data in ${i} seconds`;
+                (overlayText as HTMLElement).innerHTML = `Prepare to collect data in ${i} seconds`;
                 await delay(1000);
             }
         }
 
-        await countdown(0);
+        await countdown(10);
 
-        const SAMPLE_COUNT = 1;
+        const SAMPLE_COUNT = 50;
 
-        // collect 10 samples
         for (let i = 0; i < SAMPLE_COUNT; i++) {
-            overlayText.innerHTML = `Collecting ${i + 1}/10 sample`;
+            overlayText.innerHTML = `Collecting ${i + 1}/${SAMPLE_COUNT} sample`;
             this.classifier.addPoseData(this.currentPoseName, this.STATE.lastKeyPoints);
-            await delay(500);
+            await delay(50);
         }
 
         overlayText.innerHTML = '';
